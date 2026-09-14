@@ -1,0 +1,8 @@
+.git
+.idea
+.vscode
+*.md
+.env
+docker-compose.yml
+Makefile
+.dockerignore

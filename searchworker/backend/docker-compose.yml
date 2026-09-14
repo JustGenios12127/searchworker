@@ -1,0 +1,39 @@
+services:
+  worker-postgres:
+    image: postgres:17
+    container_name: worker-postgres
+    environment:
+      POSTGRES_DB: searchworker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "54329:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  worker-backend:
+    build: .
+    container_name: worker-backend
+    command: ["/app/server"]
+    ports:
+      - "8080:8080"
+    environment:
+      HTTP_ADDR: ":8080"
+      DATABASE_URL: "postgres://postgres:postgres@worker-postgres:5432/searchworker?sslmode=disable"
+      DATABASE_PING_TIMEOUT_SECONDS: "30"
+      AUTH_JWT_SECRET: ""
+      AUTH_JWT_ISSUER: ""
+      APP_PUBLIC_BASE_URL: ""
+      APP_PUBLIC_FILES_BASE_URL: ""
+      MIGRATIONS_DIR: "migrations"
+    depends_on:
+      worker-postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
